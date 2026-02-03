@@ -7,7 +7,8 @@ const emptyStaff = { name: '', email: '', password: 'staff123' };
 const emptyDoctor = { name: '', email: '', password: 'doctor123', departmentId: '', specialization: '', qualification: '', experienceYears: 8, consultationFee: 1000, bio: '' };
 
 export default function Staff() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isStaff } = useAuth();
+  const canManageAdmins = isAdmin;
   const [users, setUsers] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -17,11 +18,22 @@ export default function Staff() {
   const [staffForm, setStaffForm] = useState(emptyStaff);
   const [doctorForm, setDoctorForm] = useState(emptyDoctor);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [createdCredentials, setCreatedCredentials] = useState(null); // { email, password } after create
 
   const load = () => {
-    fetch('/api/users').then((r) => r.json()).then(setUsers).catch(() => setUsers([]));
-    fetch('/api/doctors').then((r) => r.json()).then(setDoctors).catch(() => setDoctors([]));
-    fetch('/api/departments').then((r) => r.json()).then(setDepartments).catch(() => setDepartments([]));
+    const headers = adminHeaders();
+    fetch('/api/users', { headers })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setUsers(Array.isArray(d) ? d : []))
+      .catch(() => setUsers([]));
+    fetch('/api/doctors')
+      .then((r) => r.json())
+      .then((d) => setDoctors(Array.isArray(d) ? d : []))
+      .catch(() => setDoctors([]));
+    fetch('/api/departments')
+      .then((r) => r.json())
+      .then(setDepartments)
+      .catch(() => setDepartments([]));
   };
 
   useEffect(() => { load(); }, []);
@@ -35,6 +47,7 @@ export default function Staff() {
     setEditingUserId(null);
     setStaffForm(emptyStaff);
     setMessage({ type: '', text: '' });
+    setCreatedCredentials(null);
   };
 
   const openAddDoctor = () => {
@@ -42,6 +55,7 @@ export default function Staff() {
     setEditingDoctorId(null);
     setDoctorForm(emptyDoctor);
     setMessage({ type: '', text: '' });
+    setCreatedCredentials(null);
   };
 
   const openEditStaff = (u) => {
@@ -76,6 +90,7 @@ export default function Staff() {
     setEditingDoctorId(null);
     setStaffForm(emptyStaff);
     setDoctorForm(emptyDoctor);
+    setCreatedCredentials(null);
   };
 
   const handleStaffSubmit = async (e) => {
@@ -88,13 +103,17 @@ export default function Staff() {
         const res = await fetch(`/api/users/${editingUserId}`, { method: 'PATCH', headers: adminHeaders(), body: JSON.stringify(body) });
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed');
         setMessage({ type: 'success', text: 'Staff updated.' });
+        await load();
+        closeForm();
       } else {
+        if (!staffForm.password || staffForm.password.length < 6) throw new Error('Password must be at least 6 characters');
         const res = await fetch('/api/users/staff', { method: 'POST', headers: adminHeaders(), body: JSON.stringify(staffForm) });
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed');
-        setMessage({ type: 'success', text: 'Staff added.' });
+        setMessage({ type: 'success', text: 'Staff created. Give them the login details below.' });
+        setCreatedCredentials({ email: staffForm.email, password: staffForm.password });
+        await load();
+        closeForm();
       }
-      await load();
-      closeForm();
     } catch (err) {
       setMessage({ type: 'error', text: err.message || 'Request failed' });
     }
@@ -110,13 +129,17 @@ export default function Staff() {
         const res = await fetch(`/api/doctors/${editingDoctorId}`, { method: 'PATCH', headers: adminHeaders(), body: JSON.stringify(body) });
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed');
         setMessage({ type: 'success', text: 'Doctor updated.' });
+        await load();
+        closeForm();
       } else {
+        if (!doctorForm.password || doctorForm.password.length < 6) throw new Error('Password must be at least 6 characters');
         const res = await fetch('/api/doctors', { method: 'POST', headers: adminHeaders(), body: JSON.stringify(doctorForm) });
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed');
-        setMessage({ type: 'success', text: 'Doctor added.' });
+        setMessage({ type: 'success', text: 'Doctor created. Give them the login details below.' });
+        setCreatedCredentials({ email: doctorForm.email, password: doctorForm.password });
+        await load();
+        closeForm();
       }
-      await load();
-      closeForm();
     } catch (err) {
       setMessage({ type: 'error', text: err.message || 'Request failed' });
     }
@@ -147,30 +170,12 @@ export default function Staff() {
     }
   };
 
-  if (!isAdmin) {
-    return (
-      <div className={styles.wrap}>
-        <h1 className={styles.title}>Staff & Doctors</h1>
-        <p className={styles.subtitle}>Only administrators can manage staff and doctors.</p>
-        <div className={styles.grid}>
-          {[...staffList, ...doctorUsers].map((u) => (
-            <div key={u.id} className={styles.card}>
-              <span className={styles.role}>{u.role}</span>
-              <h3>{u.name}</h3>
-              <p>{u.email}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className={styles.wrap}>
       <div className={styles.head}>
         <div>
           <h1 className={styles.title}>Staff & Doctors</h1>
-          <p className={styles.subtitle}>Admin-only: add, edit, or remove staff and doctor accounts.</p>
+          <p className={styles.subtitle}>{canManageAdmins ? 'Add, edit, or remove staff and doctor accounts. Only administrators can add or remove admins.' : 'Add, edit, or remove staff and doctor accounts. You cannot add or remove administrators.'}</p>
         </div>
         <div className={styles.headActions}>
           <button type="button" className={styles.addBtn} onClick={openAddStaff}>Add Staff</button>
@@ -182,14 +187,22 @@ export default function Staff() {
         <div className={message.type === 'success' ? styles.success : styles.error}>{message.text}</div>
       )}
 
+      {createdCredentials && (
+        <div className={styles.credentialsBox}>
+          <strong>Give them these login details:</strong>
+          <p>Login ID (email): <code>{createdCredentials.email}</code></p>
+          <p>Password: <code>{createdCredentials.password}</code></p>
+        </div>
+      )}
+
       {mode === 'staff' && (
         <div className={styles.formCard}>
           <h2 className={styles.formTitle}>{editingUserId ? 'Edit Staff' : 'Add Staff'}</h2>
           <form onSubmit={handleStaffSubmit} className={styles.form}>
-            <label>Name <input value={staffForm.name} onChange={(e) => setStaffForm((f) => ({ ...f, name: e.target.value }))} required /></label>
-            <label>Email <input type="email" value={staffForm.email} onChange={(e) => setStaffForm((f) => ({ ...f, email: e.target.value }))} required /></label>
-            {!editingUserId && <label>Password <input type="password" value={staffForm.password} onChange={(e) => setStaffForm((f) => ({ ...f, password: e.target.value }))} placeholder="default: staff123" /></label>}
-            {editingUserId && <label>New password (optional) <input type="password" value={staffForm.password} onChange={(e) => setStaffForm((f) => ({ ...f, password: e.target.value }))} placeholder="leave blank to keep" /></label>}
+            <label>Full name <input value={staffForm.name} onChange={(e) => setStaffForm((f) => ({ ...f, name: e.target.value }))} required /></label>
+            <label>Login ID (email) <input type="email" value={staffForm.email} onChange={(e) => setStaffForm((f) => ({ ...f, email: e.target.value }))} required placeholder="They will use this to log in" /></label>
+            {!editingUserId && <label>Password <input type="password" value={staffForm.password} onChange={(e) => setStaffForm((f) => ({ ...f, password: e.target.value }))} required minLength={6} placeholder="At least 6 characters – give this to them" /></label>}
+            {editingUserId && <label>New password (optional) <input type="password" value={staffForm.password} onChange={(e) => setStaffForm((f) => ({ ...f, password: e.target.value }))} placeholder="Leave blank to keep current" /></label>}
             <div className={styles.formActions}>
               <button type="submit" className={styles.submitBtn}>{editingUserId ? 'Save' : 'Add'}</button>
               <button type="button" className={styles.cancelBtn} onClick={closeForm}>Cancel</button>
@@ -202,10 +215,10 @@ export default function Staff() {
         <div className={styles.formCard}>
           <h2 className={styles.formTitle}>{editingDoctorId ? 'Edit Doctor' : 'Add Doctor'}</h2>
           <form onSubmit={handleDoctorSubmit} className={styles.form}>
-            <label>Name <input value={doctorForm.name} onChange={(e) => setDoctorForm((f) => ({ ...f, name: e.target.value }))} required /></label>
-            <label>Email <input type="email" value={doctorForm.email} onChange={(e) => setDoctorForm((f) => ({ ...f, email: e.target.value }))} required /></label>
-            {!editingDoctorId && <label>Password <input type="password" value={doctorForm.password} onChange={(e) => setDoctorForm((f) => ({ ...f, password: e.target.value }))} placeholder="default: doctor123" /></label>}
-            {editingDoctorId && <label>New password (optional) <input type="password" value={doctorForm.password} onChange={(e) => setDoctorForm((f) => ({ ...f, password: e.target.value }))} /></label>}
+            <label>Full name <input value={doctorForm.name} onChange={(e) => setDoctorForm((f) => ({ ...f, name: e.target.value }))} required /></label>
+            <label>Login ID (email) <input type="email" value={doctorForm.email} onChange={(e) => setDoctorForm((f) => ({ ...f, email: e.target.value }))} required placeholder="They will use this to log in" /></label>
+            {!editingDoctorId && <label>Password <input type="password" value={doctorForm.password} onChange={(e) => setDoctorForm((f) => ({ ...f, password: e.target.value }))} required minLength={6} placeholder="At least 6 characters – give this to them" /></label>}
+            {editingDoctorId && <label>New password (optional) <input type="password" value={doctorForm.password} onChange={(e) => setDoctorForm((f) => ({ ...f, password: e.target.value }))} placeholder="Leave blank to keep current" /></label>}
             <label>Department <select value={doctorForm.departmentId} onChange={(e) => setDoctorForm((f) => ({ ...f, departmentId: e.target.value }))} required>
               <option value="">Select</option>
               {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -213,7 +226,7 @@ export default function Staff() {
             <label>Specialization <input value={doctorForm.specialization} onChange={(e) => setDoctorForm((f) => ({ ...f, specialization: e.target.value }))} required /></label>
             <label>Qualification <input value={doctorForm.qualification} onChange={(e) => setDoctorForm((f) => ({ ...f, qualification: e.target.value }))} /></label>
             <label>Experience (years) <input type="number" min={0} value={doctorForm.experienceYears} onChange={(e) => setDoctorForm((f) => ({ ...f, experienceYears: parseInt(e.target.value, 10) || 0 }))} /></label>
-            <label>Consultation fee <input type="number" min={0} value={doctorForm.consultationFee} onChange={(e) => setDoctorForm((f) => ({ ...f, consultationFee: parseInt(e.target.value, 10) || 0 }))} /></label>
+            <label>Consultation fee (৳) <input type="number" min={0} value={doctorForm.consultationFee} onChange={(e) => setDoctorForm((f) => ({ ...f, consultationFee: parseInt(e.target.value, 10) || 0 }))} /></label>
             <label>Bio <input value={doctorForm.bio} onChange={(e) => setDoctorForm((f) => ({ ...f, bio: e.target.value }))} /></label>
             <div className={styles.formActions}>
               <button type="submit" className={styles.submitBtn}>{editingDoctorId ? 'Save' : 'Add'}</button>
@@ -266,13 +279,14 @@ export default function Staff() {
 
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Admin</h2>
+        {!canManageAdmins && <p className={styles.muted}>Only an administrator can add or remove admins.</p>}
         <div className={styles.grid}>
           {users.filter((u) => u.role === 'admin').map((u) => (
             <div key={u.id} className={styles.card}>
               <span className={styles.role}>admin</span>
               <h3>{u.name}</h3>
               <p>{u.email}</p>
-              <p className={styles.muted}>Cannot be removed.</p>
+              <p className={styles.muted}>{canManageAdmins ? 'Only an administrator can remove admins.' : 'You cannot add or remove administrators.'}</p>
             </div>
           ))}
         </div>

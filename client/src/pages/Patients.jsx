@@ -6,15 +6,34 @@ import styles from './Patients.module.css';
 const emptyPatient = { name: '', email: '', password: 'patient123', dateOfBirth: '', bloodGroup: '', phone: '', address: '', emergencyContact: '' };
 
 export default function Patients() {
-  const { isAdmin, isDoctor } = useAuth();
-  const canManagePatients = isAdmin || isDoctor;
+  const { isAdmin, isStaff, isDoctor } = useAuth();
+  const canManagePatients = isAdmin || isStaff || isDoctor;
   const [list, setList] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyPatient);
   const [showForm, setShowForm] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
-  const load = () => fetch('/api/patients').then((r) => r.json()).then(setList).catch(() => setList([]));
+  const searchLower = searchQuery.trim().toLowerCase();
+  const filteredList = searchLower
+    ? list.filter(
+        (p) =>
+          (p.name || '').toLowerCase().includes(searchLower) ||
+          (p.email || '').toLowerCase().includes(searchLower) ||
+          (p.phone || '').toLowerCase().includes(searchLower) ||
+          (p.address || '').toLowerCase().includes(searchLower) ||
+          (p.emergencyContact || '').toLowerCase().includes(searchLower) ||
+          (p.bloodGroup || '').toLowerCase().includes(searchLower) ||
+          (p.dateOfBirth || '').toLowerCase().includes(searchLower)
+      )
+    : list;
+
+  const load = () =>
+    fetch('/api/patients', { headers: roleHeaders() })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setList(Array.isArray(d) ? d : []))
+      .catch(() => setList([]));
 
   useEffect(() => { load(); }, []);
 
@@ -97,6 +116,25 @@ export default function Patients() {
         <div className={message.type === 'success' ? styles.success : styles.error}>{message.text}</div>
       )}
 
+      <div className={styles.searchWrap}>
+        <label className={styles.searchLabel}>
+          <span className={styles.searchLabelText}>Search patients</span>
+          <input
+            type="search"
+            className={styles.searchInput}
+            placeholder="Name, email, phone, address..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search patients"
+          />
+        </label>
+        {searchQuery.trim() && (
+          <span className={styles.searchMeta}>
+            {filteredList.length} of {list.length} patients
+          </span>
+        )}
+      </div>
+
       {showForm && (
         <div className={styles.formCard}>
           <h2 className={styles.formTitle}>{editingId ? 'Edit Patient' : 'Add Patient'}</h2>
@@ -132,7 +170,7 @@ export default function Patients() {
             </tr>
           </thead>
           <tbody>
-            {list.map((p) => (
+            {filteredList.map((p) => (
               <tr key={p.id}>
                 <td>{p.name}</td>
                 <td>{p.email}</td>
@@ -152,7 +190,11 @@ export default function Patients() {
           </tbody>
         </table>
       </div>
-      {list.length === 0 && !showForm && <p className={styles.empty}>No patients found.</p>}
+      {filteredList.length === 0 && !showForm && (
+        <p className={styles.empty}>
+          {list.length === 0 ? 'No patients found.' : 'No patients match your search.'}
+        </p>
+      )}
     </div>
   );
 }

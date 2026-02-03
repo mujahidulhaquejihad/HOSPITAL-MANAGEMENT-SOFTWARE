@@ -57,6 +57,48 @@
   font-size: 0.9rem;
 }
 
+.searchWrap {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.searchLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 200px;
+  max-width: 360px;
+}
+
+.searchLabelText {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.searchInput {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.searchMeta {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
 .formCard {
   background: var(--surface);
   border: 1px solid var(--border);

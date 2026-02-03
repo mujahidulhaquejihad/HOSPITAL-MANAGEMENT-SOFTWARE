@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { roleHeaders } from '../api/adminApi';
+import { TIME_SLOTS_12H } from '../utils/timeFormat';
 import styles from './BookAppointment.module.css';
 
 export default function BookAppointment() {
@@ -30,7 +32,6 @@ export default function BookAppointment() {
   const patientId = user?.patientId;
   if (!patientId) return null;
 
-  const timeSlots = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '14:00', '14:30', '15:00', '15:30', '16:00'];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,7 +40,7 @@ export default function BookAppointment() {
     try {
       const res = await fetch('/api/appointments', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: roleHeaders(),
         body: JSON.stringify({ patientId, doctorId, date, time, notes }),
       });
       if (!res.ok) throw new Error('Failed to book');
@@ -72,7 +73,7 @@ export default function BookAppointment() {
             <option value="">Select a doctor</option>
             {doctors.map((d) => (
               <option key={d.id} value={d.id}>
-                {d.doctorName} – {d.specialization} (${d.consultationFee})
+                {d.doctorName} – {d.specialization} (৳{d.consultationFee})
               </option>
             ))}
           </select>
@@ -89,8 +90,8 @@ export default function BookAppointment() {
         <label>
           Time
           <select value={time} onChange={(e) => setTime(e.target.value)}>
-            {timeSlots.map((t) => (
-              <option key={t} value={t}>{t}</option>
+            {TIME_SLOTS_12H.map((slot) => (
+              <option key={slot.value} value={slot.value}>{slot.label}</option>
             ))}
           </select>
         </label>

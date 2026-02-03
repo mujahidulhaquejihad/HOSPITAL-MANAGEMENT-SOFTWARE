@@ -1,58 +1,15 @@
-.page {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+.wrap {
   font-family: var(--font-sans);
 }
 
-.header {
+.section {
+  padding: 2.5rem 1.5rem;
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  box-shadow: var(--shadow);
 }
 
-.headerInner {
+.inner {
   max-width: 800px;
   margin: 0 auto;
-  padding: 0.75rem 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.logo {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--primary);
-  text-decoration: none;
-}
-
-.logo:hover {
-  text-decoration: none;
-  opacity: 0.9;
-}
-
-.loginBtn {
-  padding: 0.5rem 1.25rem;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: white;
-  background: var(--primary);
-  border-radius: var(--radius);
-  text-decoration: none;
-}
-
-.loginBtn:hover {
-  background: var(--primary-hover);
-  text-decoration: none;
-}
-
-.main {
-  flex: 1;
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
-  width: 100%;
 }
 
 .title {
@@ -63,9 +20,33 @@
 }
 
 .subtitle {
-  margin: 0 0 1.5rem;
+  margin: 0 0 1rem;
   color: var(--text-muted);
   font-size: 0.95rem;
+}
+
+.intro {
+  margin-bottom: 2rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--text-muted);
+}
+
+.intro p {
+  margin: 0 0 0.5rem;
+}
+
+.intro p:last-child {
+  margin-bottom: 0;
+}
+
+.introCount {
+  font-weight: 600;
+  color: var(--primary);
 }
 
 .list {
@@ -80,6 +61,14 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+}
+
+.patientMeta {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 0.35rem;
 }
 
 .cardTitle {
@@ -117,4 +106,42 @@
 .backLink:hover {
   color: var(--primary);
   text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 1.5rem 1rem;
+  }
+
+  .inner {
+    padding: 0 0.25rem;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .card {
+    padding: 1.25rem;
+  }
+
+  .backLink {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .section {
+    padding: 1.25rem 0.75rem;
+  }
+
+  .title {
+    font-size: 1.35rem;
+  }
+
+  .cardTitle {
+    font-size: 1rem;
+  }
 }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import styles from './Login.module.css';
 
 function getRedirectPath(searchParams) {
@@ -13,6 +14,7 @@ function getRedirectPath(searchParams) {
 
 export default function Login() {
   const { user, login } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
@@ -40,25 +42,28 @@ export default function Login() {
   return (
     <div className={styles.wrapper}>
       <div className={styles.card}>
-        <Link to="/" className={styles.backLink}>← Back to home</Link>
-        <h1 className={styles.title}>Meridian General Hospital</h1>
-        <p className={styles.subtitle}>Hospital Management Portal</p>
+        <Link to="/" className={styles.backLink}>{t('back_to_home_link')}</Link>
+        <Link to="/" className={styles.logoWrap}>
+          <img src="/Meridian.png" alt="Meridian General Hospital" className={styles.logoImg} />
+        </Link>
+        <p className={styles.subtitle}>{t('hospital_portal')}</p>
         <form onSubmit={handleSubmit} className={styles.form}>
           {error && <div className={styles.error}>{error}</div>}
           <label>
-            Email
+            {t('email')}
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" />
           </label>
           <label>
-            Password
+            {t('password')}
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" />
           </label>
           <button type="submit" disabled={loading} className={styles.submit}>
-            {loading ? 'Signing in…' : 'Sign in'}
+            {loading ? t('signing_in') : t('sign_in')}
           </button>
         </form>
+        <p className={styles.signupLink}>New patient? <Link to="/signup">{t('create_account')}</Link></p>
         <div className={styles.demo}>
-          <p><strong>Demo logins</strong></p>
+          <p><strong>{t('demo_logins')}</strong></p>
           <p>Admin: admin@hospital.com / admin123</p>
           <p>Doctor: dr.drayeshasiddika@hospital.com / doctor123</p>
           <p>Staff: maria.akter@hospital.com / staff123</p>

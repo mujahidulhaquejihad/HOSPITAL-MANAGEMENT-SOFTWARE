@@ -158,7 +158,10 @@ export function getAppointments() {
 
 export function addAppointment(apt) {
   const id = 'apt-' + (appointments.length + 1);
-  appointments = [...appointments, { ...apt, id }];
+  const record = { ...apt, id };
+  if (record.patientName != null) record.patientName = String(record.patientName).trim().slice(0, 200);
+  if (record.patientPhone != null) record.patientPhone = String(record.patientPhone).trim().slice(0, 50);
+  appointments = [...appointments, record];
   return appointments[appointments.length - 1];
 }
 
@@ -231,9 +234,10 @@ export function updateDoctor(id, updates) {
   const doc = doctors.find((d) => d.id === id);
   if (!doc) return null;
   const user = users.find((u) => u.id === doc.userId);
-  const { name, email, departmentId, specialization, qualification, experienceYears, consultationFee, bio } = updates;
+  const { name, email, password, departmentId, specialization, qualification, experienceYears, consultationFee, bio } = updates;
   if (name !== undefined && user) user.name = name;
   if (email !== undefined && user) user.email = email;
+  if (password !== undefined && password && user) user.password = password;
   if (departmentId !== undefined) doc.departmentId = departmentId;
   if (specialization !== undefined) doc.specialization = specialization;
   if (qualification !== undefined) doc.qualification = qualification;
@@ -281,10 +285,10 @@ function sanitizeUser(u) {
 }
 
 export function deleteUser(id) {
-  if (id === 'user-admin') return false;
   const idx = users.findIndex((u) => u.id === id);
   if (idx === -1) return false;
   const user = users[idx];
+  if (user.role === 'admin') return false;
   if (user.doctorId) {
     const dIdx = doctors.findIndex((d) => d.id === user.doctorId);
     if (dIdx !== -1) doctors.splice(dIdx, 1);

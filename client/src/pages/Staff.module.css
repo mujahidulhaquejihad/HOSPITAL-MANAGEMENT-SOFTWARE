@@ -62,6 +62,27 @@
   font-size: 0.9rem;
 }
 
+.credentialsBox {
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  background: var(--primary-light);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.credentialsBox p {
+  margin: 0.35rem 0;
+}
+
+.credentialsBox code {
+  background: var(--surface);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
 .formCard {
   background: var(--surface);
   border: 1px solid var(--border);

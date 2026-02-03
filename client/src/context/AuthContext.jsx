@@ -13,16 +13,20 @@ export function AuthProvider({ children }) {
   });
 
   const login = useCallback(async (email, password) => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data.error || 'Login failed');
+    let res;
+    try {
+      res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+    } catch (err) {
+      throw new Error('Cannot reach server. Is it running on port 3001?');
     }
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error || `Login failed (${res.status})`);
+    }
     setUser(data);
     localStorage.setItem('hospital_user', JSON.stringify(data));
     return data;

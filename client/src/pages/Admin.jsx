@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { adminHeaders } from '../api/adminApi';
 import styles from './Admin.module.css';
 
 export default function Admin() {
   const [stats, setStats] = useState({ users: 0, patients: 0, appointments: 0, doctors: 0 });
 
   useEffect(() => {
+    const headers = adminHeaders();
     Promise.all([
-      fetch('/api/users').then((r) => r.json()),
-      fetch('/api/patients').then((r) => r.json()),
-      fetch('/api/appointments').then((r) => r.json()),
-      fetch('/api/doctors').then((r) => r.json()),
+      fetch('/api/users', { headers }).then((r) => (r.ok ? r.json() : [])).then((d) => (Array.isArray(d) ? d : [])),
+      fetch('/api/patients', { headers }).then((r) => (r.ok ? r.json() : [])).then((d) => (Array.isArray(d) ? d : [])),
+      fetch('/api/appointments', { headers }).then((r) => (r.ok ? r.json() : [])).then((d) => (Array.isArray(d) ? d : [])),
+      fetch('/api/doctors').then((r) => r.json()).then((d) => (Array.isArray(d) ? d : [])),
     ])
       .then(([users, patients, appointments, doctors]) => {
         setStats({

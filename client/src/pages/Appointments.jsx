@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { roleHeaders } from '../api/adminApi';
+import { time24To12, TIME_SLOTS_12H } from '../utils/timeFormat';
 import styles from './Appointments.module.css';
-
-const TIME_SLOTS = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '14:00', '14:30', '15:00', '15:30', '16:00'];
 
 export default function Appointments() {
   const { user, isDoctor, isPatient, isStaff, isAdmin } = useAuth();
@@ -14,51 +13,82 @@ export default function Appointments() {
   const [showCreate, setShowCreate] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
-  const [createForm, setCreateForm] = useState({ patientId: '', doctorId: '', date: '', time: '09:00', notes: '' });
+  const [createForm, setCreateForm] = useState({
+    mode: 'anyone',
+    patientId: '',
+    patientName: '',
+    patientPhone: '',
+    doctorId: '',
+    date: '',
+    time: '09:00',
+    notes: '',
+  });
   const [editForm, setEditForm] = useState({ date: '', time: '', status: 'scheduled', notes: '' });
 
   const staffCanManage = isStaff || isAdmin;
+  const canCreateAppointment = isAdmin || isStaff || isDoctor;
 
   const loadAppointments = () => {
     const params = new URLSearchParams();
     if (user?.role === 'doctor' && user?.doctorId) params.set('doctorId', user.doctorId);
     if (user?.role === 'patient' && user?.patientId) params.set('patientId', user.patientId);
     if (user?.role) params.set('role', user.role);
-    fetch(`/api/appointments?${params}`)
-      .then((r) => r.json())
-      .then(setList)
+    fetch(`/api/appointments?${params}`, { headers: roleHeaders() })
+      .then((r) => (r.ok ? r.json() : Promise.resolve([])))
+      .then((data) => setList(Array.isArray(data) ? data : []))
       .catch(() => setList([]));
   };
 
   useEffect(() => {
+    if (!user) return;
     loadAppointments();
-    if (staffCanManage) {
-      fetch('/api/patients').then((r) => r.json()).then(setPatients).catch(() => setPatients([]));
-      fetch('/api/doctors').then((r) => r.json()).then(setDoctors).catch(() => setDoctors([]));
+    if (canCreateAppointment) {
+      fetch('/api/patients', { headers: roleHeaders() })
+        .then((r) => (r.ok ? r.json() : Promise.resolve([])))
+        .then((data) => setPatients(Array.isArray(data) ? data : []))
+        .catch(() => setPatients([]));
+      fetch('/api/doctors')
+        .then((r) => r.json())
+        .then(setDoctors)
+        .catch(() => setDoctors([]));
     }
-  }, [user?.role, user?.doctorId, user?.patientId, staffCanManage]);
+  }, [user?.role, user?.doctorId, user?.patientId, canCreateAppointment]);
 
   const filtered = filter === 'all' ? list : list.filter((a) => a.status === filter);
 
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     setMessage({ type: '', text: '' });
+    const isExisting = createForm.mode === 'existing';
+    if (isExisting && !createForm.patientId) {
+      setMessage({ type: 'error', text: 'Please select a patient.' });
+      return;
+    }
+    if (!isExisting && (!createForm.patientName?.trim() || !createForm.patientPhone?.trim())) {
+      setMessage({ type: 'error', text: 'Please enter patient name and phone.' });
+      return;
+    }
     try {
+      const body = {
+        doctorId: createForm.doctorId,
+        date: createForm.date,
+        time: createForm.time,
+        notes: createForm.notes || '',
+      };
+      if (isExisting) body.patientId = createForm.patientId;
+      else {
+        body.patientName = createForm.patientName.trim();
+        body.patientPhone = createForm.patientPhone.trim();
+      }
       const res = await fetch('/api/appointments', {
         method: 'POST',
         headers: roleHeaders(),
-        body: JSON.stringify({
-          patientId: createForm.patientId,
-          doctorId: createForm.doctorId,
-          date: createForm.date,
-          time: createForm.time,
-          notes: createForm.notes || '',
-        }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error('Failed to create');
       setMessage({ type: 'success', text: 'Appointment created.' });
       setShowCreate(false);
-      setCreateForm({ patientId: '', doctorId: '', date: '', time: '09:00', notes: '' });
+      setCreateForm({ mode: 'anyone', patientId: '', patientName: '', patientPhone: '', doctorId: '', date: '', time: '09:00', notes: '' });
       loadAppointments();
     } catch {
       setMessage({ type: 'error', text: 'Could not create appointment.' });
@@ -92,8 +122,8 @@ export default function Appointments() {
     <div className={styles.wrap}>
       <div className={styles.head}>
         <h1 className={styles.title}>Appointments</h1>
-        {staffCanManage && (
-          <button type="button" className={styles.addBtn} onClick={() => setShowCreate(true)}>Create appointment (for patient)</button>
+        {canCreateAppointment && (
+          <button type="button" className={styles.addBtn} onClick={() => setShowCreate(true)}>Create appointment</button>
         )}
       </div>
 
@@ -101,21 +131,39 @@ export default function Appointments() {
         <div className={message.type === 'success' ? styles.success : styles.error}>{message.text}</div>
       )}
 
-      {showCreate && staffCanManage && (
+      {showCreate && canCreateAppointment && (
         <div className={styles.formCard}>
-          <h2 className={styles.formTitle}>Create appointment for patient</h2>
+          <h2 className={styles.formTitle}>Create appointment</h2>
           <form onSubmit={handleCreateSubmit} className={styles.form}>
-            <label>Patient <select value={createForm.patientId} onChange={(e) => setCreateForm((f) => ({ ...f, patientId: e.target.value }))} required>
-              <option value="">Select patient</option>
-              {patients.map((p) => <option key={p.id} value={p.id}>{p.name} – {p.email}</option>)}
-            </select></label>
+            <fieldset className={styles.fieldset}>
+              <legend>Patient</legend>
+              <label className={styles.radioLabel}>
+                <input type="radio" name="patientMode" checked={createForm.mode === 'anyone'} onChange={() => setCreateForm((f) => ({ ...f, mode: 'anyone', patientId: '' }))} />
+                Anyone (enter name &amp; phone)
+              </label>
+              <label className={styles.radioLabel}>
+                <input type="radio" name="patientMode" checked={createForm.mode === 'existing'} onChange={() => setCreateForm((f) => ({ ...f, mode: 'existing', patientName: '', patientPhone: '' }))} />
+                Existing patient (select from list)
+              </label>
+            </fieldset>
+            {createForm.mode === 'anyone' ? (
+              <>
+                <label>Patient name <input value={createForm.patientName} onChange={(e) => setCreateForm((f) => ({ ...f, patientName: e.target.value }))} placeholder="Full name" required={createForm.mode === 'anyone'} /></label>
+                <label>Patient phone <input type="tel" value={createForm.patientPhone} onChange={(e) => setCreateForm((f) => ({ ...f, patientPhone: e.target.value }))} placeholder="+880 1XXX XXXXXX" required={createForm.mode === 'anyone'} /></label>
+              </>
+            ) : (
+              <label>Patient <select value={createForm.patientId} onChange={(e) => setCreateForm((f) => ({ ...f, patientId: e.target.value }))}>
+                <option value="">Select patient</option>
+                {patients.map((p) => <option key={p.id} value={p.id}>{p.name} – {p.email}</option>)}
+              </select></label>
+            )}
             <label>Doctor <select value={createForm.doctorId} onChange={(e) => setCreateForm((f) => ({ ...f, doctorId: e.target.value }))} required>
               <option value="">Select doctor</option>
               {doctors.map((d) => <option key={d.id} value={d.id}>{d.doctorName} – {d.specialization}</option>)}
             </select></label>
             <label>Date <input type="date" value={createForm.date} onChange={(e) => setCreateForm((f) => ({ ...f, date: e.target.value }))} required min={new Date().toISOString().slice(0, 10)} /></label>
             <label>Time <select value={createForm.time} onChange={(e) => setCreateForm((f) => ({ ...f, time: e.target.value }))}>
-              {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
+              {TIME_SLOTS_12H.map((slot) => <option key={slot.value} value={slot.value}>{slot.label}</option>)}
             </select></label>
             <label>Notes <input value={createForm.notes} onChange={(e) => setCreateForm((f) => ({ ...f, notes: e.target.value }))} placeholder="Optional" /></label>
             <div className={styles.formActions}>
@@ -132,7 +180,7 @@ export default function Appointments() {
           <form onSubmit={handleEditSubmit} className={styles.form}>
             <label>Date <input type="date" value={editForm.date} onChange={(e) => setEditForm((f) => ({ ...f, date: e.target.value }))} required /></label>
             <label>Time <select value={editForm.time} onChange={(e) => setEditForm((f) => ({ ...f, time: e.target.value }))}>
-              {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
+              {TIME_SLOTS_12H.map((slot) => <option key={slot.value} value={slot.value}>{slot.label}</option>)}
             </select></label>
             <label>Status <select value={editForm.status} onChange={(e) => setEditForm((f) => ({ ...f, status: e.target.value }))}>
               <option value="scheduled">scheduled</option>
@@ -173,7 +221,7 @@ export default function Appointments() {
             {filtered.map((a) => (
               <tr key={a.id}>
                 <td>{a.date}</td>
-                <td>{a.time}</td>
+                <td>{time24To12(a.time)}</td>
                 {!isPatient && <td>{a.patientName}</td>}
                 {!isDoctor && <td>{a.doctorName}</td>}
                 <td>{a.departmentName}</td>

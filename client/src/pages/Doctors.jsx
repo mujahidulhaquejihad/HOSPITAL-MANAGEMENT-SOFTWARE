@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import styles from './Doctors.module.css';
 
 export default function Doctors() {
-  const { isPatient } = useAuth();
+  const { user, isPatient } = useAuth();
+  const isGuest = !user;
+  const [searchParams] = useSearchParams();
   const [doctors, setDoctors] = useState([]);
   const [deptFilter, setDeptFilter] = useState('');
   const [departments, setDepartments] = useState([]);
+
+  const departmentIdFromUrl = searchParams.get('departmentId');
 
   useEffect(() => {
     fetch('/api/doctors')
@@ -16,9 +20,21 @@ export default function Doctors() {
       .catch(() => setDoctors([]));
     fetch('/api/departments')
       .then((r) => r.json())
-      .then(setDepartments)
+      .then((data) => {
+        const list = Array.isArray(data) ? data : [];
+        setDepartments(list);
+        if (departmentIdFromUrl && list.some((d) => d.id === departmentIdFromUrl)) {
+          setDeptFilter(departmentIdFromUrl);
+        }
+      })
       .catch(() => setDepartments([]));
   }, []);
+
+  useEffect(() => {
+    if (departmentIdFromUrl && departments.some((d) => d.id === departmentIdFromUrl)) {
+      setDeptFilter(departmentIdFromUrl);
+    }
+  }, [departmentIdFromUrl, departments]);
 
   const filtered = deptFilter
     ? doctors.filter((d) => d.departmentId === deptFilter)
@@ -27,7 +43,11 @@ export default function Doctors() {
   return (
     <div className={styles.wrap}>
       <h1 className={styles.title}>Our Doctors</h1>
-      <p className={styles.subtitle}>Browse by department and choose a doctor for your appointment.</p>
+      <p className={styles.subtitle}>
+        {isGuest
+          ? 'Browse by department. Create an account or sign in to book an appointment.'
+          : 'Browse by department and choose a doctor for your appointment.'}
+      </p>
 
       <div className={styles.toolbar}>
         <label>
@@ -46,7 +66,7 @@ export default function Doctors() {
           <article key={doc.id} className={styles.card}>
             <div className={styles.cardHeader}>
               <span className={styles.dept}>{doc.departmentName}</span>
-              <span className={styles.fee}>${doc.consultationFee} consultation</span>
+              <span className={styles.fee}>৳{doc.consultationFee} consultation</span>
             </div>
             <h2 className={styles.name}>{doc.doctorName}</h2>
             <p className={styles.spec}>{doc.specialization}</p>
@@ -55,6 +75,9 @@ export default function Doctors() {
             <p className={styles.exp}>{doc.experienceYears} years experience</p>
             {isPatient && (
               <Link to={`/dashboard/book?doctorId=${doc.id}`} className={styles.bookBtn}>Book appointment</Link>
+            )}
+            {isGuest && (
+              <Link to={`/login?redirect=${encodeURIComponent(`/dashboard/book?doctorId=${doc.id}`)}`} className={styles.bookBtn}>Book appointment</Link>
             )}
           </article>
         ))}

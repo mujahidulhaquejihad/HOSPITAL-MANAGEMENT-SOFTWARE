@@ -49,7 +49,7 @@ export default function Dashboard() {
             <p>View and manage patient records.</p>
           </Link>
         )}
-        {isAdmin && (
+        {(isAdmin || isStaff) && (
           <Link to="/dashboard/admin" className={styles.cardAction}>
             <h3>Admin</h3>
             <p>System overview and settings.</p>
@@ -64,7 +64,7 @@ export default function Dashboard() {
           <Link to="/dashboard/appointments">My appointments</Link>
           {isPatient && <Link to="/dashboard/book">Book new appointment</Link>}
           {(isAdmin || isStaff) && <Link to="/dashboard/patients">Patient list</Link>}
-          {isAdmin && <Link to="/dashboard/staff">Staff management</Link>}
+          {(isAdmin || isStaff) && <Link to="/dashboard/staff">Staff management</Link>}
         </div>
       </section>
     </div>
