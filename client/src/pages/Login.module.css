@@ -17,10 +17,24 @@
   border: 1px solid var(--border);
 }
 
+.backLink {
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
 .title {
   margin: 0 0 0.25rem;
-  font-family: var(--font-serif);
-  font-size: 1.75rem;
+  font-family: var(--font-sans);
+  font-size: 1.5rem;
+  font-weight: 700;
   color: var(--primary);
   text-align: center;
 }

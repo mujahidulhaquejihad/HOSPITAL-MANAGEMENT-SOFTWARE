@@ -30,7 +30,7 @@ export default function Dashboard() {
           <h3>Appointments</h3>
           <p className={styles.big}>{stats.appointments}</p>
           <p className={styles.muted}>Total</p>
-          <Link to="/appointments">View all →</Link>
+          <Link to="/dashboard/appointments">View all →</Link>
         </div>
         <div className={styles.card}>
           <h3>Today</h3>
@@ -38,19 +38,19 @@ export default function Dashboard() {
           <p className={styles.muted}>Scheduled today</p>
         </div>
         {isPatient && (
-          <Link to="/book" className={styles.cardAction}>
+          <Link to="/dashboard/book" className={styles.cardAction}>
             <h3>Book appointment</h3>
             <p>Choose a doctor and schedule a visit.</p>
           </Link>
         )}
         {(isAdmin || isStaff) && (
-          <Link to="/patients" className={styles.cardAction}>
+          <Link to="/dashboard/patients" className={styles.cardAction}>
             <h3>Patients</h3>
             <p>View and manage patient records.</p>
           </Link>
         )}
         {isAdmin && (
-          <Link to="/admin" className={styles.cardAction}>
+          <Link to="/dashboard/admin" className={styles.cardAction}>
             <h3>Admin</h3>
             <p>System overview and settings.</p>
           </Link>
@@ -60,11 +60,11 @@ export default function Dashboard() {
       <section className={styles.section}>
         <h2>Quick actions</h2>
         <div className={styles.actions}>
-          <Link to="/doctors">Browse doctors</Link>
-          <Link to="/appointments">My appointments</Link>
-          {isPatient && <Link to="/book">Book new appointment</Link>}
-          {(isAdmin || isStaff) && <Link to="/patients">Patient list</Link>}
-          {isAdmin && <Link to="/staff">Staff management</Link>}
+          <Link to="/dashboard/doctors">Browse doctors</Link>
+          <Link to="/dashboard/appointments">My appointments</Link>
+          {isPatient && <Link to="/dashboard/book">Book new appointment</Link>}
+          {(isAdmin || isStaff) && <Link to="/dashboard/patients">Patient list</Link>}
+          {isAdmin && <Link to="/dashboard/staff">Staff management</Link>}
         </div>
       </section>
     </div>

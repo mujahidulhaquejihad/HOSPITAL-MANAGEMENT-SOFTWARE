@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import styles from './Layout.module.css';
 
@@ -10,7 +10,7 @@ export default function Layout() {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   return (
@@ -23,7 +23,7 @@ export default function Layout() {
             <span className={styles.menuIcon} />
           </button>
           <h1 className={styles.logo}>
-            <NavLink to="/">Meridian General</NavLink>
+            <NavLink to="/dashboard">Meridian General</NavLink>
           </h1>
           <div className={styles.user}>
             <span className={styles.role}>{user?.role}</span>
@@ -32,13 +32,15 @@ export default function Layout() {
           </div>
         </header>
         <nav className={`${styles.nav} ${menuOpen ? styles.navOpen : ''}`} aria-hidden={!menuOpen}>
-        <NavLink to="/" end className={({ isActive }) => (isActive ? styles.navActive : '')} onClick={() => setMenuOpen(false)}>Dashboard</NavLink>
-        <NavLink to="/doctors" className={({ isActive }) => (isActive ? styles.navActive : '')} onClick={() => setMenuOpen(false)}>Doctors</NavLink>
-        {isPatient && <NavLink to="/book" className={({ isActive }) => (isActive ? styles.navActive : '')} onClick={() => setMenuOpen(false)}>Book Appointment</NavLink>}
-        <NavLink to="/appointments" className={({ isActive }) => (isActive ? styles.navActive : '')} onClick={() => setMenuOpen(false)}>Appointments</NavLink>
-        {(isAdmin || isStaff || isDoctor) && <NavLink to="/patients" className={({ isActive }) => (isActive ? styles.navActive : '')} onClick={() => setMenuOpen(false)}>Patients</NavLink>}
-        {isAdmin && <NavLink to="/staff" className={({ isActive }) => (isActive ? styles.navActive : '')} onClick={() => setMenuOpen(false)}>Staff</NavLink>}
-        {isAdmin && <NavLink to="/admin" className={({ isActive }) => (isActive ? styles.navActive : '')} onClick={() => setMenuOpen(false)}>Admin</NavLink>}
+        <Link to="/" onClick={() => setMenuOpen(false)}>Home</Link>
+        <NavLink to="/dashboard" end className={({ isActive }) => (isActive ? styles.navActive : '')} onClick={() => setMenuOpen(false)}>Dashboard</NavLink>
+        <NavLink to="/dashboard/doctors" className={({ isActive }) => (isActive ? styles.navActive : '')} onClick={() => setMenuOpen(false)}>Doctors</NavLink>
+        {isPatient && <NavLink to="/dashboard/book" className={({ isActive }) => (isActive ? styles.navActive : '')} onClick={() => setMenuOpen(false)}>Book Appointment</NavLink>}
+        <NavLink to="/dashboard/appointments" className={({ isActive }) => (isActive ? styles.navActive : '')} onClick={() => setMenuOpen(false)}>Appointments</NavLink>
+        <NavLink to="/dashboard/reports" className={({ isActive }) => (isActive ? styles.navActive : '')} onClick={() => setMenuOpen(false)}>Online Report</NavLink>
+        {(isAdmin || isStaff || isDoctor) && <NavLink to="/dashboard/patients" className={({ isActive }) => (isActive ? styles.navActive : '')} onClick={() => setMenuOpen(false)}>Patients</NavLink>}
+        {isAdmin && <NavLink to="/dashboard/staff" className={({ isActive }) => (isActive ? styles.navActive : '')} onClick={() => setMenuOpen(false)}>Staff</NavLink>}
+        {isAdmin && <NavLink to="/dashboard/admin" className={({ isActive }) => (isActive ? styles.navActive : '')} onClick={() => setMenuOpen(false)}>Admin</NavLink>}
         </nav>
       </div>
       <main className={styles.main}>

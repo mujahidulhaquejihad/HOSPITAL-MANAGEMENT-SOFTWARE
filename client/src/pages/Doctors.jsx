@@ -54,7 +54,7 @@ export default function Doctors() {
             <p className={styles.bio}>{doc.bio}</p>
             <p className={styles.exp}>{doc.experienceYears} years experience</p>
             {isPatient && (
-              <Link to={`/book?doctorId=${doc.id}`} className={styles.bookBtn}>Book appointment</Link>
+              <Link to={`/dashboard/book?doctorId=${doc.id}`} className={styles.bookBtn}>Book appointment</Link>
             )}
           </article>
         ))}

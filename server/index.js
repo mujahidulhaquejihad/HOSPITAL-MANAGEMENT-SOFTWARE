@@ -8,6 +8,15 @@ import {
   getAppointments,
   addAppointment,
   updateAppointment,
+  addPatient,
+  updatePatient,
+  deletePatient,
+  addDoctor,
+  updateDoctor,
+  deleteDoctor,
+  addStaff,
+  updateUser,
+  deleteUser,
 } from './data/db.js';
 
 const app = express();
@@ -15,6 +24,23 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
+
+// Admin-only: require x-user-role: admin header (client sends from useAuth)
+function requireAdmin(req, res, next) {
+  if (req.headers['x-user-role'] !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  next();
+}
+
+// Admin or Doctor: for patient add/edit/remove
+function requireAdminOrDoctor(req, res, next) {
+  const role = req.headers['x-user-role'];
+  if (role !== 'admin' && role !== 'doctor') {
+    return res.status(403).json({ error: 'Admin or doctor access required' });
+  }
+  next();
+}
 
 // Helper: get user without password
 function sanitizeUser(u) {
@@ -39,6 +65,29 @@ app.post('/api/auth/login', (req, res) => {
     withDetails.patient = patients.find((p) => p.id === user.patientId);
   }
   res.json(withDetails);
+});
+
+// Auth: patient signup (no auth required)
+app.post('/api/auth/signup', (req, res) => {
+  const { name, email, password, dateOfBirth, bloodGroup, phone, address, emergencyContact } = req.body || {};
+  if (!name || !email || !password) {
+    return res.status(400).json({ error: 'Name, email and password are required' });
+  }
+  if (users.some((u) => u.email.toLowerCase() === String(email).toLowerCase())) {
+    return res.status(400).json({ error: 'An account with this email already exists' });
+  }
+  const created = addPatient({
+    name: name.trim(),
+    email: email.trim().toLowerCase(),
+    password: password,
+    dateOfBirth: dateOfBirth || '',
+    bloodGroup: bloodGroup || '',
+    phone: phone || '',
+    address: address || '',
+    emergencyContact: emergencyContact || '',
+  });
+  if (!created) return res.status(400).json({ error: 'Could not create account' });
+  res.status(201).json({ message: 'Account created. You can now log in.', email: created.email });
 });
 
 // Departments (public for patient doctor browsing)
@@ -115,6 +164,71 @@ app.get('/api/patients', (req, res) => {
     return { ...p, name: user?.name, email: user?.email };
   });
   res.json(list);
+});
+
+// --- Admin or Doctor: add / edit / remove patients ---
+app.post('/api/patients', requireAdminOrDoctor, (req, res) => {
+  const created = addPatient(req.body);
+  if (!created) return res.status(400).json({ error: 'Invalid or missing name/email' });
+  res.status(201).json(created);
+});
+
+app.patch('/api/patients/:id', requireAdminOrDoctor, (req, res) => {
+  const updated = updatePatient(req.params.id, req.body);
+  if (!updated) return res.status(404).json({ error: 'Patient not found' });
+  res.json(updated);
+});
+
+app.delete('/api/patients/:id', requireAdminOrDoctor, (req, res) => {
+  const ok = deletePatient(req.params.id);
+  if (!ok) return res.status(404).json({ error: 'Patient not found' });
+  res.status(204).send();
+});
+
+// --- Admin-only: add / edit / remove doctors ---
+app.post('/api/doctors', requireAdmin, (req, res) => {
+  const { email } = req.body || {};
+  if (email && users.some((u) => u.email.toLowerCase() === String(email).toLowerCase())) {
+    return res.status(400).json({ error: 'An account with this email already exists. Use a different login ID (email).' });
+  }
+  const created = addDoctor(req.body);
+  if (!created) return res.status(400).json({ error: 'Invalid or missing name, email (login ID), password, departmentId, or specialization' });
+  res.status(201).json(created);
+});
+
+app.patch('/api/doctors/:id', requireAdmin, (req, res) => {
+  const updated = updateDoctor(req.params.id, req.body);
+  if (!updated) return res.status(404).json({ error: 'Doctor not found' });
+  res.json(updated);
+});
+
+app.delete('/api/doctors/:id', requireAdmin, (req, res) => {
+  const ok = deleteDoctor(req.params.id);
+  if (!ok) return res.status(404).json({ error: 'Doctor not found' });
+  res.status(204).send();
+});
+
+// --- Admin-only: add / edit / remove staff (and any user) ---
+app.post('/api/users/staff', requireAdmin, (req, res) => {
+  const { email } = req.body || {};
+  if (email && users.some((u) => u.email.toLowerCase() === String(email).toLowerCase())) {
+    return res.status(400).json({ error: 'An account with this email already exists. Use a different login ID (email).' });
+  }
+  const created = addStaff(req.body);
+  if (!created) return res.status(400).json({ error: 'Invalid or missing name, email (login ID), or password' });
+  res.status(201).json(created);
+});
+
+app.patch('/api/users/:id', requireAdmin, (req, res) => {
+  const updated = updateUser(req.params.id, req.body);
+  if (!updated) return res.status(404).json({ error: 'User not found' });
+  res.json(updated);
+});
+
+app.delete('/api/users/:id', requireAdmin, (req, res) => {
+  const ok = deleteUser(req.params.id);
+  if (!ok) return res.status(404).json({ error: 'User not found or cannot delete admin' });
+  res.status(204).send();
 });
 
 app.listen(PORT, () => {

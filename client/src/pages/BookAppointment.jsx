@@ -47,7 +47,7 @@ export default function BookAppointment() {
       setDate('');
       setTime('09:00');
       setNotes('');
-      setTimeout(() => navigate('/appointments'), 1500);
+      setTimeout(() => navigate('/dashboard/appointments'), 1500);
     } catch {
       setMessage({ type: 'error', text: 'Could not book appointment. Please try again.' });
     } finally {
@@ -60,7 +60,7 @@ export default function BookAppointment() {
   return (
     <div className={styles.wrap}>
       <h1 className={styles.title}>Book an appointment</h1>
-      <p className={styles.subtitle}>Choose your doctor and preferred date and time.</p>
+      <p className={styles.subtitle}>Choose your preferred doctor and date and time.</p>
 
       <form onSubmit={handleSubmit} className={styles.form}>
         {message.text && (

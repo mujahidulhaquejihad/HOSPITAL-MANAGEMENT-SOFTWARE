@@ -3,9 +3,17 @@
   margin: 0 auto;
 }
 
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
 .title {
   margin: 0 0 0.25rem;
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: 1.75rem;
   color: var(--text);
 }
@@ -14,6 +22,141 @@
   margin: 0 0 1rem;
   color: var(--text-muted);
   font-size: 0.95rem;
+}
+
+.addBtn {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: white;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.addBtn:hover {
+  background: var(--primary-hover);
+}
+
+.success {
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+}
+
+.error {
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+  background: #fef2f2;
+  color: var(--danger);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+}
+
+.formCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.formTitle {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  color: var(--text);
+}
+
+.form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.form input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+}
+
+.formActions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.submitBtn {
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  color: white;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.submitBtn:hover {
+  background: var(--primary-hover);
+}
+
+.cancelBtn {
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.cancelBtn:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.editBtn, .delBtn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  margin-right: 0.25rem;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+}
+
+.editBtn {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.editBtn:hover {
+  background: var(--primary);
+  color: white;
+}
+
+.delBtn {
+  background: #fef2f2;
+  color: var(--danger);
+}
+
+.delBtn:hover {
+  background: var(--danger);
+  color: white;
 }
 
 .tableWrap {
