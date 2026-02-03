@@ -337,8 +337,8 @@ app.delete('/api/doctors/:id', requireAuth, requireAdminOrStaff, (req, res) => {
   res.status(204).send();
 });
 
-// --- Admin or Staff: add / edit / remove staff (staff cannot add/remove admin) ---
-app.post('/api/users/staff', requireAuth, requireAdminOrStaff, async (req, res) => {
+// --- Admin only: add new staff (staff cannot add staff) ---
+app.post('/api/users/staff', requireAuth, requireAdmin, async (req, res) => {
   const email = validEmail(req.body?.email) ? trim(req.body.email, MAX.email).toLowerCase() : '';
   if (email && users.some((u) => u.email.toLowerCase() === email)) {
     return res.status(400).json({ error: 'An account with this email already exists. Use a different login ID (email).' });
@@ -364,6 +364,9 @@ app.patch('/api/users/:id', requireAuth, requireAdminOrStaff, async (req, res) =
   if (req.user.role === 'staff' && target.role === 'admin') {
     return res.status(403).json({ error: 'Only an administrator can modify an admin account.' });
   }
+  if (req.user.role === 'staff' && target.role === 'staff') {
+    return res.status(403).json({ error: 'Only an administrator can edit staff information.' });
+  }
   const updates = {};
   if (req.body?.name != null) updates.name = trim(req.body.name, MAX.name);
   if (req.body?.email != null && validEmail(req.body.email)) updates.email = trim(req.body.email, MAX.email).toLowerCase();
@@ -380,6 +383,9 @@ app.delete('/api/users/:id', requireAuth, requireAdminOrStaff, (req, res) => {
   if (!target) return res.status(404).json({ error: 'User not found' });
   if (req.user.role === 'staff' && target.role === 'admin') {
     return res.status(403).json({ error: 'Only an administrator can remove an admin.' });
+  }
+  if (req.user.role === 'staff' && target.role === 'staff') {
+    return res.status(403).json({ error: 'Only an administrator can remove staff.' });
   }
   const ok = deleteUser(req.params.id);
   if (!ok) return res.status(404).json({ error: 'User not found or cannot delete admin' });

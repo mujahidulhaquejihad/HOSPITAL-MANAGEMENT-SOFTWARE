@@ -178,7 +178,7 @@ export default function Staff() {
           <p className={styles.subtitle}>{canManageAdmins ? 'Add, edit, or remove staff and doctor accounts. Only administrators can add or remove admins.' : 'Add, edit, or remove staff and doctor accounts. You cannot add or remove administrators.'}</p>
         </div>
         <div className={styles.headActions}>
-          <button type="button" className={styles.addBtn} onClick={openAddStaff}>Add Staff</button>
+          {canManageAdmins && <button type="button" className={styles.addBtn} onClick={openAddStaff}>Add Staff</button>}
           <button type="button" className={styles.addBtn} onClick={openAddDoctor}>Add Doctor</button>
         </div>
       </div>
@@ -238,16 +238,19 @@ export default function Staff() {
 
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Staff</h2>
+        {!canManageAdmins && <p className={styles.muted}>Only an administrator can edit or remove staff.</p>}
         <div className={styles.grid}>
           {staffList.map((u) => (
             <div key={u.id} className={styles.card}>
               <span className={styles.role}>staff</span>
               <h3>{u.name}</h3>
               <p>{u.email}</p>
-              <div className={styles.cardActions}>
-                <button type="button" className={styles.editBtn} onClick={() => openEditStaff(u)}>Edit</button>
-                <button type="button" className={styles.delBtn} onClick={() => handleDeleteUser(u.id)}>Remove</button>
-              </div>
+              {canManageAdmins && (
+                <div className={styles.cardActions}>
+                  <button type="button" className={styles.editBtn} onClick={() => openEditStaff(u)}>Edit</button>
+                  <button type="button" className={styles.delBtn} onClick={() => handleDeleteUser(u.id)}>Remove</button>
+                </div>
+              )}
             </div>
           ))}
         </div>
