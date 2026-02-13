@@ -32,7 +32,9 @@ import {
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+// In production set FRONTEND_URL (e.g. https://your-app.onrender.com). Leave unset for local dev.
+const corsOrigin = process.env.FRONTEND_URL || 'http://localhost:5173';
+app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(express.json());
 
 // --- Input validation helpers ---
@@ -396,3 +398,5 @@ app.delete('/api/users/:id', requireAuth, requireAdminOrStaff, (req, res) => {
 app.listen(PORT, () => {
   console.log(`Hospital API running at http://localhost:${PORT}`);
 });
+
+module.exports = app;
