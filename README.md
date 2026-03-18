@@ -84,3 +84,20 @@ More doctors: `dr.chen@hospital.com`, `dr.okonkwo@hospital.com`, `dr.patel@hospi
 - `GET /api/users` – List users (admin).
 
 For production, replace the in-memory store in `server/data/db.js` with a database (e.g. PostgreSQL, MongoDB) and add proper authentication (e.g. JWT).
+
+## Deploy: Vercel (frontend) + Render (backend)
+
+1. **Render (API)**  
+   - Deploy the `server` folder as a Web Service.  
+   - **Environment variables:**  
+     - `FRONTEND_URL` = your Vercel site URL, e.g. `https://your-app.vercel.app` (exact match; no trailing slash). This allows the browser to call the API (CORS).  
+     - Optional: `JWT_SECRET` for stable tokens across restarts.
+
+2. **Vercel (React app)**  
+   - Root directory: `client` (or wherever Vite is built).  
+   - Build: `npm run build`  
+   - **Environment variable:**  
+     - `VITE_API_URL` = your Render API URL **without** a trailing slash, e.g. `https://hospital-management-software-1-fjvb.onrender.com`  
+   - Redeploy after adding env vars (Vite bakes `VITE_*` into the build).
+
+3. If login/API still fails, check the browser **Network** tab for CORS errors — then fix `FRONTEND_URL` on Render to match the exact URL you open in the browser (including `www` if you use it).

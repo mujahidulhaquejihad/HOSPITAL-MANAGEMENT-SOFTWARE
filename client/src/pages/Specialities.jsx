@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { apiUrl } from '../api/base';
 import styles from './Specialities.module.css';
 
 // Map speciality display name to API department name (for linking to doctors)
@@ -47,7 +48,7 @@ export default function Specialities() {
   const [departments, setDepartments] = useState([]);
 
   useEffect(() => {
-    fetch('/api/departments')
+    fetch(apiUrl('/api/departments'))
       .then((r) => r.json())
       .then(setDepartments)
       .catch(() => setDepartments([]));

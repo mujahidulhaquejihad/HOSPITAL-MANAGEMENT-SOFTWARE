@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { roleHeaders } from '../api/adminApi';
+import { apiUrl } from '../api/base';
 import { TIME_SLOTS_12H } from '../utils/timeFormat';
 import styles from './BookAppointment.module.css';
 
@@ -19,7 +20,7 @@ export default function BookAppointment() {
   const [message, setMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
-    fetch('/api/doctors')
+    fetch(apiUrl('/api/doctors'))
       .then((r) => r.json())
       .then(setDoctors)
       .catch(() => setDoctors([]));
@@ -38,7 +39,7 @@ export default function BookAppointment() {
     setMessage({ type: '', text: '' });
     setLoading(true);
     try {
-      const res = await fetch('/api/appointments', {
+      const res = await fetch(apiUrl('/api/appointments'), {
         method: 'POST',
         headers: roleHeaders(),
         body: JSON.stringify({ patientId, doctorId, date, time, notes }),

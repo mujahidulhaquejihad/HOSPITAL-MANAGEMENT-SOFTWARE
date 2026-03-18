@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { apiUrl } from '../api/base';
 
 const AuthContext = createContext(null);
 
@@ -15,7 +16,7 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (email, password) => {
     let res;
     try {
-      res = await fetch('/api/auth/login', {
+      res = await fetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

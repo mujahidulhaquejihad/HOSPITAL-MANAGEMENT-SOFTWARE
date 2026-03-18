@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { roleHeaders } from '../api/adminApi';
+import { apiUrl } from '../api/base';
 import styles from './Patients.module.css';
 
 const emptyPatient = { name: '', email: '', password: 'patient123', dateOfBirth: '', bloodGroup: '', phone: '', address: '', emergencyContact: '' };
@@ -30,7 +31,7 @@ export default function Patients() {
     : list;
 
   const load = () =>
-    fetch('/api/patients', { headers: roleHeaders() })
+    fetch(apiUrl('/api/patients'), { headers: roleHeaders() })
       .then((r) => (r.ok ? r.json() : []))
       .then((d) => setList(Array.isArray(d) ? d : []))
       .catch(() => setList([]));
@@ -73,11 +74,11 @@ export default function Patients() {
     if (!body.password && editingId) delete body.password;
     try {
       if (editingId) {
-        const res = await fetch(`/api/patients/${editingId}`, { method: 'PATCH', headers: roleHeaders(), body: JSON.stringify(body) });
+        const res = await fetch(apiUrl(`/api/patients/${editingId}`), { method: 'PATCH', headers: roleHeaders(), body: JSON.stringify(body) });
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed');
         setMessage({ type: 'success', text: 'Patient updated.' });
       } else {
-        const res = await fetch('/api/patients', { method: 'POST', headers: roleHeaders(), body: JSON.stringify(body) });
+        const res = await fetch(apiUrl('/api/patients'), { method: 'POST', headers: roleHeaders(), body: JSON.stringify(body) });
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed');
         setMessage({ type: 'success', text: 'Patient added.' });
       }
@@ -91,7 +92,7 @@ export default function Patients() {
   const handleDelete = async (id) => {
     if (!window.confirm('Remove this patient? This cannot be undone.')) return;
     try {
-      const res = await fetch(`/api/patients/${id}`, { method: 'DELETE', headers: roleHeaders() });
+      const res = await fetch(apiUrl(`/api/patients/${id}`), { method: 'DELETE', headers: roleHeaders() });
       if (!res.ok) throw new Error('Failed');
       await load();
       setMessage({ type: 'success', text: 'Patient removed.' });

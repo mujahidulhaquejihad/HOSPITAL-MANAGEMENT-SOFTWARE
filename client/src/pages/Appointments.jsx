@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { roleHeaders } from '../api/adminApi';
+import { apiUrl } from '../api/base';
 import { time24To12, TIME_SLOTS_12H } from '../utils/timeFormat';
 import styles from './Appointments.module.css';
 
@@ -33,7 +34,7 @@ export default function Appointments() {
     if (user?.role === 'doctor' && user?.doctorId) params.set('doctorId', user.doctorId);
     if (user?.role === 'patient' && user?.patientId) params.set('patientId', user.patientId);
     if (user?.role) params.set('role', user.role);
-    fetch(`/api/appointments?${params}`, { headers: roleHeaders() })
+    fetch(apiUrl(`/api/appointments?${params}`), { headers: roleHeaders() })
       .then((r) => (r.ok ? r.json() : Promise.resolve([])))
       .then((data) => setList(Array.isArray(data) ? data : []))
       .catch(() => setList([]));
@@ -43,11 +44,11 @@ export default function Appointments() {
     if (!user) return;
     loadAppointments();
     if (canCreateAppointment) {
-      fetch('/api/patients', { headers: roleHeaders() })
+      fetch(apiUrl('/api/patients'), { headers: roleHeaders() })
         .then((r) => (r.ok ? r.json() : Promise.resolve([])))
         .then((data) => setPatients(Array.isArray(data) ? data : []))
         .catch(() => setPatients([]));
-      fetch('/api/doctors')
+      fetch(apiUrl('/api/doctors'))
         .then((r) => r.json())
         .then(setDoctors)
         .catch(() => setDoctors([]));
@@ -80,7 +81,7 @@ export default function Appointments() {
         body.patientName = createForm.patientName.trim();
         body.patientPhone = createForm.patientPhone.trim();
       }
-      const res = await fetch('/api/appointments', {
+      const res = await fetch(apiUrl('/api/appointments'), {
         method: 'POST',
         headers: roleHeaders(),
         body: JSON.stringify(body),
@@ -104,7 +105,7 @@ export default function Appointments() {
     e.preventDefault();
     setMessage({ type: '', text: '' });
     try {
-      const res = await fetch(`/api/appointments/${editingId}`, {
+      const res = await fetch(apiUrl(`/api/appointments/${editingId}`), {
         method: 'PATCH',
         headers: roleHeaders(),
         body: JSON.stringify(editForm),

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { apiUrl } from '../api/base';
 import styles from './Doctors.module.css';
 
 export default function Doctors() {
@@ -14,11 +15,11 @@ export default function Doctors() {
   const departmentIdFromUrl = searchParams.get('departmentId');
 
   useEffect(() => {
-    fetch('/api/doctors')
+    fetch(apiUrl('/api/doctors'))
       .then((r) => r.json())
       .then(setDoctors)
       .catch(() => setDoctors([]));
-    fetch('/api/departments')
+    fetch(apiUrl('/api/departments'))
       .then((r) => r.json())
       .then((data) => {
         const list = Array.isArray(data) ? data : [];

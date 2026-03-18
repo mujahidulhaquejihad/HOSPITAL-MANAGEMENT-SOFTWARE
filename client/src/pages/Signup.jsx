@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { apiUrl } from '../api/base';
 import styles from './Signup.module.css';
 
 export default function Signup() {
@@ -56,7 +57,7 @@ export default function Signup() {
         [form.emergencyContactName.trim(), form.emergencyContactPhone.trim()].filter(Boolean).length > 0
           ? [form.emergencyContactName.trim(), form.emergencyContactPhone.trim()].join(' – ')
           : undefined;
-      const res = await fetch('/api/auth/signup', {
+      const res = await fetch(apiUrl('/api/auth/signup'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

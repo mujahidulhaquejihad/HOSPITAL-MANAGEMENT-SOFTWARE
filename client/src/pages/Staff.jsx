@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { adminHeaders } from '../api/adminApi';
+import { apiUrl } from '../api/base';
 import styles from './Staff.module.css';
 
 const emptyStaff = { name: '', email: '', password: 'staff123' };
@@ -22,15 +23,15 @@ export default function Staff() {
 
   const load = () => {
     const headers = adminHeaders();
-    fetch('/api/users', { headers })
+    fetch(apiUrl('/api/users'), { headers })
       .then((r) => (r.ok ? r.json() : []))
       .then((d) => setUsers(Array.isArray(d) ? d : []))
       .catch(() => setUsers([]));
-    fetch('/api/doctors')
+    fetch(apiUrl('/api/doctors'))
       .then((r) => r.json())
       .then((d) => setDoctors(Array.isArray(d) ? d : []))
       .catch(() => setDoctors([]));
-    fetch('/api/departments')
+    fetch(apiUrl('/api/departments'))
       .then((r) => r.json())
       .then(setDepartments)
       .catch(() => setDepartments([]));
@@ -100,14 +101,14 @@ export default function Staff() {
       if (editingUserId) {
         const body = { name: staffForm.name, email: staffForm.email };
         if (staffForm.password) body.password = staffForm.password;
-        const res = await fetch(`/api/users/${editingUserId}`, { method: 'PATCH', headers: adminHeaders(), body: JSON.stringify(body) });
+        const res = await fetch(apiUrl(`/api/users/${editingUserId}`), { method: 'PATCH', headers: adminHeaders(), body: JSON.stringify(body) });
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed');
         setMessage({ type: 'success', text: 'Staff updated.' });
         await load();
         closeForm();
       } else {
         if (!staffForm.password || staffForm.password.length < 6) throw new Error('Password must be at least 6 characters');
-        const res = await fetch('/api/users/staff', { method: 'POST', headers: adminHeaders(), body: JSON.stringify(staffForm) });
+        const res = await fetch(apiUrl('/api/users/staff'), { method: 'POST', headers: adminHeaders(), body: JSON.stringify(staffForm) });
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed');
         setMessage({ type: 'success', text: 'Staff created. Give them the login details below.' });
         setCreatedCredentials({ email: staffForm.email, password: staffForm.password });
@@ -126,14 +127,14 @@ export default function Staff() {
       if (editingDoctorId) {
         const body = { name: doctorForm.name, email: doctorForm.email, departmentId: doctorForm.departmentId, specialization: doctorForm.specialization, qualification: doctorForm.qualification, experienceYears: doctorForm.experienceYears, consultationFee: doctorForm.consultationFee, bio: doctorForm.bio };
         if (doctorForm.password) body.password = doctorForm.password;
-        const res = await fetch(`/api/doctors/${editingDoctorId}`, { method: 'PATCH', headers: adminHeaders(), body: JSON.stringify(body) });
+        const res = await fetch(apiUrl(`/api/doctors/${editingDoctorId}`), { method: 'PATCH', headers: adminHeaders(), body: JSON.stringify(body) });
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed');
         setMessage({ type: 'success', text: 'Doctor updated.' });
         await load();
         closeForm();
       } else {
         if (!doctorForm.password || doctorForm.password.length < 6) throw new Error('Password must be at least 6 characters');
-        const res = await fetch('/api/doctors', { method: 'POST', headers: adminHeaders(), body: JSON.stringify(doctorForm) });
+        const res = await fetch(apiUrl('/api/doctors'), { method: 'POST', headers: adminHeaders(), body: JSON.stringify(doctorForm) });
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed');
         setMessage({ type: 'success', text: 'Doctor created. Give them the login details below.' });
         setCreatedCredentials({ email: doctorForm.email, password: doctorForm.password });
@@ -149,7 +150,7 @@ export default function Staff() {
     if (id === 'user-admin') return;
     if (!window.confirm('Remove this user? This cannot be undone.')) return;
     try {
-      const res = await fetch(`/api/users/${id}`, { method: 'DELETE', headers: adminHeaders() });
+      const res = await fetch(apiUrl(`/api/users/${id}`), { method: 'DELETE', headers: adminHeaders() });
       if (!res.ok) throw new Error('Failed');
       await load();
       setMessage({ type: 'success', text: 'User removed.' });
@@ -161,7 +162,7 @@ export default function Staff() {
   const handleDeleteDoctor = async (id) => {
     if (!window.confirm('Remove this doctor? This cannot be undone.')) return;
     try {
-      const res = await fetch(`/api/doctors/${id}`, { method: 'DELETE', headers: adminHeaders() });
+      const res = await fetch(apiUrl(`/api/doctors/${id}`), { method: 'DELETE', headers: adminHeaders() });
       if (!res.ok) throw new Error('Failed');
       await load();
       setMessage({ type: 'success', text: 'Doctor removed.' });

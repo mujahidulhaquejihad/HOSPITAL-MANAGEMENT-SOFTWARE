@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { apiUrl } from '../api/base';
+import { roleHeaders } from '../api/adminApi';
 import { Link } from 'react-router-dom';
 import styles from './Dashboard.module.css';
 
@@ -8,7 +10,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState({ appointments: 0, today: 0 });
 
   useEffect(() => {
-    fetch('/api/appointments')
+    fetch(apiUrl('/api/appointments'), { headers: roleHeaders() })
       .then((r) => r.json())
       .then((list) => {
         const today = new Date().toISOString().slice(0, 10);
